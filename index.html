@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convert SVG to EPS</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
+        body { background-color: #2D2A54; display: flex; justify-content: center; align-items: center; min-height: 100vh; width: 100vw; }
+        .phone-container { width: 100%; min-height: 100vh; display: flex; flex-direction: column; position: relative; background-color: #2D2A54; padding-bottom: 30px; }
+        .header-bar { background-color: #2D2A54; padding: 18px 20px; text-align: center; border-bottom: 2px solid #3F3B72; flex-shrink: 0; }
+        .title-app { color: white; font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        .workspace { flex: 1; display: flex; flex-direction: column; gap: 15px; padding: 20px; }
+        .dropzone { min-height: 250px; flex: 1; background-color: white; border-radius: 24px; border: 3px solid #00A2FF; display: flex; flex-direction: column; align-items: center; padding: 20px; justify-content: center; }
+        .btn-select { background-color: #222046; color: white; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 16px; border: 2px solid #00A2FF; cursor: pointer; margin-bottom: 12px; flex-shrink: 0; width: 100%; }
+        .file-list-container { width: 100%; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .empty-text { color: #2D2A54; opacity: 0.4; font-weight: bold; font-size: 16px; text-align: center; width: 100%; }
+        .file-item { background-color: #F0F4F8; padding: 10px 14px; border-radius: 10px; font-size: 13px; color: #2D2A54; font-weight: bold; display: flex; align-items: center; border-left: 4px solid #00A2FF; }
+        .file-number { color: #00A2FF; margin-right: 10px; font-weight: 900; min-width: 20px; }
+        .file-name-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+        .btn-start { background-color: #5EE384; color: #2D2A54; width: 100%; padding: 16px; font-size: 18px; font-weight: 900; border-radius: 18px; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0; }
+        .progress-container { width: 100%; height: 12px; background-color: #3F3B72; border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+        .progress-bar { width: 0%; height: 100%; background-color: #5EE384; transition: width 0.1s linear; }
+        .btn-download { width: 100%; padding: 18px; font-size: 20px; font-weight: 900; border-radius: 18px; border: none; text-transform: uppercase; letter-spacing: 1px; user-select: none; flex-shrink: 0; margin-bottom: 10px; }
+        .btn-download.disabled { background-color: #4A4775; color: #7A77A5; cursor: not-allowed; pointer-events: none; }
+        .btn-download.active { background-color: #00A2FF; color: white; cursor: pointer; pointer-events: auto; }
+    </style>
+</head>
+<body>
+
+<div class="phone-container">
+    <div class="header-bar">
+        <div class="title-app">Convert SVG to EPS</div>
+    </div>
+
+    <div class="workspace">
+        <div class="dropzone">
+            <button id="btnSelectText" class="btn-select" onclick="document.getElementById('fileInput').click()">Select SVG</button>
+            <input type="file" id="fileInput" multiple accept="*/*" style="display: none;" onchange="handleFileSelect()">
+            
+            <div id="fileListContainer" class="file-list-container">
+                <div class="empty-text">Belum ada file dipilih</div>
+            </div>
+        </div>
+
+        <button class="btn-start" onclick="startConversion()">Start Convert EPS</button>
+
+        <div class="progress-container">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+
+        <button id="btnDownload" class="btn-download disabled" onclick="triggerDownload()">Download EPS</button>
+    </div>
+</div>
+
+<script>
+    let selectedFiles = [];
+
+    function handleFileSelect() {
+        const input = document.getElementById('fileInput');
+        selectedFiles = input.files;
+        const container = document.getElementById('fileListContainer');
+        const btnText = document.getElementById('btnSelectText');
+        container.innerHTML = '';
+        
+        if(selectedFiles.length > 0) {
+            btnText.innerText = `Select SVG (${selectedFiles.length} Files)`;
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'file-item';
+                itemDiv.innerHTML = `<span class="file-number">${i + 1}.</span><span class="file-name-text">${selectedFiles[i].name}</span>`;
+                container.appendChild(itemDiv);
+            }
+            document.getElementById('progressBar').style.width = '0%';
+            setDownloadState(false);
+        } else {
+            btnText.innerText = 'Select SVG';
+            container.innerHTML = '<div class="empty-text">Belum ada file dipilih</div>';
+        }
+    }
+
+    function setDownloadState(isReady) {
+        const btn = document.getElementById('btnDownload');
+        if(isReady) { btn.classList.remove('disabled'); btn.classList.add('active'); }
+        else { btn.classList.remove('active'); btn.classList.add('disabled'); }
+    }
+
+    function startConversion() {
+        if(selectedFiles.length === 0) { alert("Silakan pilih file SVG terlebih dahulu!"); return; }
+        const formData = new FormData();
+        for (let i = 0; i < selectedFiles.length; i++) { formData.append('files', selectedFiles[i]); }
+
+        const progressBar = document.getElementById('progressBar');
+        let width = 0; progressBar.style.width = '0%';
+        
+        const interval = setInterval(() => {
+            if (width >= 85) { clearInterval(interval); } 
+            else { width += 5; progressBar.style.width = width + '%'; }
+        }, 100);
+
+        fetch('/convert', { method: 'POST', body: formData })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                clearInterval(interval);
+                progressBar.style.width = '100%';
+                setTimeout(() => { setDownloadState(true); }, 300);
+            } else {
+                alert("Konversi gagal: " + data.error);
+                progressBar.style.width = '0%';
+            }
+        })
+        .catch(err => {
+            clearInterval(interval);
+            alert("Terjadi kesalahan sistem backend.");
+            progressBar.style.width = '0%';
+        });
+    }
+
+    function triggerDownload() {
+        window.location.href = '/download';
+    }
+</script>
+</body>
+</html>
