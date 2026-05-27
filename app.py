@@ -3,7 +3,8 @@ import zipfile
 import glob
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, request, jsonify, send_file
-import cairosvg
+from svglib.svglib import svg2rlg
+from reportlab.graphics import renderPS
 
 app = Flask(__name__)
 
@@ -44,18 +45,12 @@ def convert_files():
         eps_path = os.path.join(OUTPUT_FOLDER, eps_filename)
         
         try:
-            tree = ET.parse(svg_path)
-            root = tree.getroot()
-            width = root.get('width')
-            height = root.get('height')
+            # Membaca SVG menggunakan svglib
+            drawing = svg2rlg(svg_path)
             
-            if width and height:
-                width = float(width.replace('px', '').replace('pt', ''))
-                height = float(height.replace('px', '').replace('pt', ''))
-                cairosvg.svg2eps(url=svg_path, write_to=eps_path, output_width=width, output_height=height)
-            else:
-                cairosvg.svg2eps(url=svg_path, write_to=eps_path)
-                
+            # Mengonversi ke format EPS/PS menggunakan backend ReportLab
+            renderPS.drawToFile(drawing, eps_path)
+            
             converted_paths.append(eps_path)
             os.remove(svg_path)
         except Exception as e:
