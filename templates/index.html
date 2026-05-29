@@ -24,6 +24,17 @@
         .btn-download { width: 100%; padding: 18px; font-size: 20px; font-weight: 900; border-radius: 18px; border: none; text-transform: uppercase; letter-spacing: 1px; user-select: none; flex-shrink: 0; margin-bottom: 10px; }
         .btn-download.disabled { background-color: #4A4775; color: #7A77A5; cursor: not-allowed; pointer-events: none; }
         .btn-download.active { background-color: #00A2FF; color: white; cursor: pointer; pointer-events: auto; }
+        .footer-credit {
+    text-align: center;
+    font-size: 11px;
+    color: #7A77A5; /* Warna ungu abu-abu soft, senada dengan tombol disabled */
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    margin-top: auto; /* Mendorong ke paling bawah secara otomatis */
+    padding-top: 10px;
+    opacity: 0.7;
+}
+
     </style>
 </head>
 <body>
@@ -51,6 +62,15 @@
 
         <button id="btnDownload" class="btn-download disabled" onclick="triggerDownload()">Download EPS</button>
     </div>
+    <div class="footer-credit">
+        Designed by Irwan Setiadi
+    </div>
+
+</div> ```
+
+### Mengapa ditaruh di situ?
+Karena `.phone-container` menggunakan `display: flex; flex-direction: column;`, dengan memberikan `margin-top: auto;` pada `.footer-credit`, tulisan tersebut otomatis akan mengunci posisinya di bagian paling bawah container utama, tepat di bawah area workspace. Warnanya juga disesuaikan dengan palet aplikasi kamu (`#7A77A5`) agar terlihat profesional dan tidak terlalu mencolok.
+
 </div>
 
 <script>
